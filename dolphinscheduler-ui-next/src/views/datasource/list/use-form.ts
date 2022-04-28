@@ -25,6 +25,7 @@ import type {
   IDataBaseOption,
   IDataBaseOptionKeys
 } from './types'
+import {IDataSource} from "./types";
 
 export function useForm(id?: number) {
   const { t } = useI18n()
@@ -96,8 +97,8 @@ export function useForm(id?: number) {
       password: {
         trigger: ['input'],
         validator() {
-          if (!state.detailForm.password) {
-            return new Error(t('datasource.user_password_tips'))
+          if (!state.detailForm.userName) {
+            return new Error(t('datasource.user_name_tips'))
           }
         }
       },
@@ -146,8 +147,12 @@ export function useForm(id?: number) {
   const resetFieldsValue = () => {
     state.detailForm = { ...initialValues }
   }
-  const setFieldsValue = (values: object) => {
-    state.detailForm = { ...state.detailForm, ...values }
+  const setFieldsValue = (values: IDataSource) => {
+    state.detailForm = {
+      ...state.detailForm,
+      ...values,
+      other: JSON.stringify(values.other)
+    }
   }
   const getFieldsValue = () => state.detailForm
 

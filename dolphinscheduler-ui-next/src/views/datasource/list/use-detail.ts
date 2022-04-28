@@ -24,7 +24,7 @@ import {
   verifyDataSourceName
 } from '@/service/modules/data-source'
 import { useI18n } from 'vue-i18n'
-import type { IDataSource } from './types'
+import type { IDataSource, IDataSourceDetail } from './types'
 
 export function useDetail(getFieldsValue: Function) {
   const { t } = useI18n()
@@ -50,7 +50,7 @@ export function useDetail(getFieldsValue: Function) {
     const dataSourceRes = await queryDataSource(id)
     status.loading = false
     PREV_NAME = dataSourceRes.name
-    return dataSourceRes
+    return dataSourceRes as IDataSource
   }
 
   const testConnect = async () => {
