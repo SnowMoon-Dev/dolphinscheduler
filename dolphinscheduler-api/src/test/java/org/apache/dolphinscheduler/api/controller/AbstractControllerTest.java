@@ -19,6 +19,7 @@ package org.apache.dolphinscheduler.api.controller;
 
 import org.apache.dolphinscheduler.api.ApiApplicationServer;
 import org.apache.dolphinscheduler.api.controller.AbstractControllerTest.RegistryServer;
+import org.apache.dolphinscheduler.api.controller.extensions.TimingExtension;
 import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.service.SessionService;
 import org.apache.dolphinscheduler.api.service.UsersService;
@@ -35,26 +36,27 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * abstract controller test
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = {ApiApplicationServer.class, DaoConfiguration.class, RegistryServer.class})
 @AutoConfigureMockMvc
 @DirtiesContext
-public abstract class AbstractControllerTest {
+@ExtendWith({RandomParametersExtension.class, TimingExtension.class})
+public abstract class AbstractControllerTest implements TestLifecycleLogger{
 
     public static final String SESSION_ID = "sessionId";
 
@@ -71,27 +73,30 @@ public abstract class AbstractControllerTest {
 
     protected String sessionId;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    @DisplayName("request user session")
+    public void init(TestInfo testInfo) {
+        logger.info("request user session");
         user = usersService.queryUser(1);
-        createSession(user);
+        sessionId = sessionService.createSession(user, "127.0.0.1");
+        assertThat(sessionId).isNotEmpty();
+//        String displayName = testInfo.getDisplayName();
+//        assertTrue(displayName.equals("TEST 1") || displayName.equals("test2()"));
     }
 
-    @After
-    public void after() throws Exception {
+    @AfterEach
+    @DisplayName("release user session")
+    public void tearDown() throws Exception {
+        logger.info("release user session");
         sessionService.signOut("127.0.0.1", user);
     }
 
-    private void createSession(User loginUser) {
-
-        user = loginUser;
-
-        String session = sessionService.createSession(loginUser, "127.0.0.1");
-        sessionId = session;
-
-        Assert.assertFalse(StringUtils.isEmpty(session));
-    }
-
+    //    private void createSession(User loginUser) {
+//        user = loginUser;
+//        sessionId = sessionService.createSession(loginUser, "127.0.0.1");
+//        assertThat(sessionId).isNotEmpty();
+//    }
+//
     public Map<String, Object> success() {
         Map<String, Object> serviceResult = new HashMap<>();
         putMsg(serviceResult, Status.SUCCESS);
